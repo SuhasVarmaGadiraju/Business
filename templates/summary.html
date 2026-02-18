@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Summary - Godavari Homemade Pickles</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=1.1">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('home') }}" class="nav-logo">Godavari Homemade Pickles</a>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="{{ url_for('order_page') }}" class="nav-link">Order Pickles</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <a href="{{ url_for('summary_page') }}" class="cart-link">
+                    🛒 <span id="cart-count" class="cart-badge">0</span>
+                </a>
+                <div class="hamburger">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container page-title-section">
+        <h1>Order Summary</h1>
+        <p>Review your selection before ordering.</p>
+    </div>
+
+    <div class="container">
+        <div class="summary-card">
+            <div id="summary-list" class="summary-list">
+                <!-- Items will be injected here -->
+            </div>
+
+
+            <div class="total-section invoice-layout">
+                <div class="summary-line final-total-line">
+                    <span class="invoice-label">Total Amount</span>
+                    <span class="invoice-value" id="total-price">₹0</span>
+                </div>
+            </div>
+
+            <a href="{{ url_for('order_page') }}" class="back-link">← Add More Items</a>
+
+            <div class="customer-details">
+                <h3>Your Details</h3>
+                <div class="form-group">
+                    <label>Full Name:</label>
+                    <input type="text" id="customer-name" class="form-control" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number:</label>
+                    <input type="tel" id="customer-phone" class="form-control" placeholder="Enter your phone number">
+                </div>
+            </div>
+
+            <button id="place-order-btn" class="btn btn-order">
+                Confirm & Order on WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <!-- Script to load summary logic -->
+    <script src="{{ url_for('static', filename='main.js') }}?v=1.1"></script>
+</body>
+
+</html>
