@@ -26,12 +26,13 @@ let cart = {};
 document.addEventListener("DOMContentLoaded", () => {
     // Check which page we are on
     if (document.getElementById("pickle-grid")) {
-        // We are on order.html
+        // We are on order-pickles
         loadOrderPage();
-        // Force reset cart on page load
-        localStorage.clear();
-        cart = {};
-        updateFloatingBar();
+        // Persist cart: Removed force clear
+        // localStorage.clear();
+        loadCartFromStorage(); // Make sure to load existing cart!
+        // cart = {}; // Don't reset cart object
+        updateNavbarCartCount();
     } else if (document.getElementById("summary-list")) {
         // We are on summary.html
         loadSummaryPage();
@@ -148,22 +149,10 @@ function loadOrderPage() {
     };
 
     // Initial Render: Trigger 'all' view to show combined list
-    // Use setTimeout to ensure DOM is ready if needed, though we are in loadOrderPage
     setTimeout(() => filterCategory('all'), 0);
 
-    // 2. Add Floating Bar (Sticky Bottom)
-    // Check if it already exists to avoid duplicates
-    if (!document.getElementById('floating-bar')) {
-        const floatingBar = document.createElement('div');
-        floatingBar.id = 'floating-bar';
-        floatingBar.className = 'floating-bar';
-        floatingBar.innerHTML = `
-            <div class="cart-count">0 items selected</div>
-            <button onclick="goToSummary()" class="btn-proceed">Proceed to Order →</button>
-        `;
-        document.body.appendChild(floatingBar);
-    }
 }
+
 
 function updateCart(selectElement) {
     const card = selectElement.closest('.card');
@@ -171,31 +160,232 @@ function updateCart(selectElement) {
     const price = parseInt(card.dataset.price);
     const qty = parseInt(selectElement.value);
 
+    // Track previous state
+    const currentQty = (cart[name]) ? cart[name].qty : 0;
+
     if (qty > 0) {
         cart[name] = { price: price, qty: qty };
     } else {
-        delete cart[name];
+        if (currentQty > 0) {
+            delete cart[name];
+        }
     }
 
-    updateFloatingBar();
+    // REMOVED: Sidebar popup logic (toggleCart, updateMiniCart)
+    // REMOVED: Floating bar logic (updateFloatingBar)
+
+    // Update Header Count
+    updateNavbarCartCount();
+
     saveCartIsStorage();
 }
 
-function updateFloatingBar() {
-    const bar = document.getElementById('floating-bar');
-    if (!bar) return; // Exit if bar not found
+/* Mini Cart Sidebar Logic */
+let cartTimer = null; // Global timer variable
+
+function toggleCart(show) {
+    let sidebar = document.getElementById('cart-sidebar');
+    if (!sidebar) {
+        // Create sidebar if it doesn't exist
+        sidebar = document.createElement('div');
+        sidebar.id = 'cart-sidebar';
+        sidebar.className = 'cart-sidebar';
+
+        // Initial HTML structure
+        sidebar.innerHTML = `
+            <div class="cart-header">
+                <h3>Shopping Cart</h3>
+                <button type="button" class="close-cart" onclick="toggleCart(false)">×</button>
+            </div>
+            <div class="cart-items"></div>
+            <div class="cart-footer"></div>
+        `;
+        document.body.appendChild(sidebar);
+    }
+
+    // Clear any existing timer
+    if (cartTimer) {
+        clearTimeout(cartTimer);
+        cartTimer = null;
+    }
+
+    if (show) {
+        sidebar.classList.add('active');
+        updateMiniCart();
+
+        // 1. CLEAR existing timer on show (so we restart the countdown)
+        if (cartTimer) {
+            clearTimeout(cartTimer);
+            cartTimer = null;
+        }
+
+        // 2. Start new timer
+        cartTimer = setTimeout(() => {
+            toggleCart(false);
+        }, 3000);
+
+        // Re-attach listeners every time to be safe? 
+        // No, if we attach them to 'sidebar' element, they persist. 
+        // BUT, if sidebar is re-created or innerHTML is wiped, they might be lost?
+        // Wait, innerHTML is set ONLY on creation or in updateMiniCart?
+        // updateMiniCart sets innerHTML, which WIPES listeners attached to children, but NOT the sidebar itself.
+        // HOWEVER, onmouseenter etc are attached to sidebar object. That should be fine.
+
+        // Let's debug: Maybe mouse is already over it?
+
+        sidebar.onmouseenter = () => {
+            console.log("Mouse enter - pausing timer");
+            if (cartTimer) {
+                clearTimeout(cartTimer);
+                cartTimer = null;
+            }
+        };
+
+        sidebar.onmouseleave = () => {
+            console.log("Mouse leave - resuming timer");
+            if (cartTimer) clearTimeout(cartTimer);
+            cartTimer = setTimeout(() => {
+                toggleCart(false);
+            }, 3000);
+        };
+
+        // 5. Click outside (simple version)
+        // Note: Ideally this listener should be added once, but strictly per request scope:
+        document.onclick = function (e) {
+            if (sidebar.classList.contains('active') &&
+                !sidebar.contains(e.target) &&
+                !e.target.closest('.card') &&
+                !e.target.closest('.qty-btn-mini')) {
+                toggleCart(false);
+            }
+        };
+
+    } else {
+        sidebar.classList.remove('active');
+    }
+}
+
+function updateMiniCart() {
+    let sidebar = document.getElementById('cart-sidebar');
+    if (!sidebar) return;
+
+    let itemsHtml = '';
+    let total = 0;
+    let itemCount = Object.keys(cart).length;
+
+    // Header
+    const headerHtml = `
+        <div class='cart-header'>
+            <h3>Shopping Cart (${itemCount})</h3>
+            <button class='close-cart' onclick='toggleCart(false)'>×</button>
+        </div>
+    `;
+
+    if (itemCount === 0) {
+        itemsHtml = '<div style="text-align:center; margin-top:50px; color:#999;">Your cart is empty</div>';
+    } else {
+        for (const [name, item] of Object.entries(cart)) {
+            const itemTotal = item.price * item.qty;
+            total += itemTotal;
+            itemsHtml += `
+                <div class="cart-item-row">
+                    <div class="cart-item-info">
+                        <h4>${name}</h4>
+                        <div class="qty-controls">
+                            <button class="qty-btn-mini" onclick="changeCartQty('${name}', -1)">−</button>
+                            <span class="qty-display">${item.qty} Kg</span>
+                            <button class="qty-btn-mini" onclick="changeCartQty('${name}', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="cart-item-price">₹${itemTotal}</div>
+                </div>
+            `;
+        }
+    }
+
+    sidebar.innerHTML = `
+        ${headerHtml}
+        <div class="cart-items">
+            ${itemsHtml}
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total-row">
+                <span>Total:</span>
+                <span>₹${total}</span>
+            </div>
+            ${itemCount > 0 ? '<button onclick="goToSummary()" class="btn-checkout">Checkout →</button>' : ''}
+        </div>
+    `;
+}
+
+function changeCartQty(name, change) {
+    if (!cart[name]) return;
+
+    const newQty = cart[name].qty + change;
+
+    // Check Max Limit (5 Kg)
+    if (newQty > 5) {
+        showToast("Maximum 5 Kg allowed per pickle.", "removed"); // using 'removed' style for error/warning
+        return;
+    }
+
+    if (newQty <= 0) {
+        delete cart[name];
+    } else {
+        cart[name].qty = newQty;
+    }
+
+    // 1. Save
+    saveCartIsStorage();
+
+    // 2. Update Sidebar
+    updateMiniCart();
+
+    // 4. Update Main Grid UI (Crucial)
+    // Find card by data-name
+    const card = document.querySelector(`.card[data-name="${name}"]`);
+    if (card) {
+        const select = card.querySelector('.qty-select');
+        if (select) {
+            select.value = newQty;
+            // Handle 0 case (unselect)
+            if (newQty <= 0) select.value = 0;
+        }
+    }
+
+    // 5. Update Navbar Count
+    updateNavbarCartCount();
+}
+
+function updateNavbarCartCount() {
+    // Calculate total items (sum of quantities or just number of unique items?)
+    // User said "show the numbers on the cart and increase it as i go on add". 
+    // Usually total items (qty sum) is better for "increase as I add". 
+    // But if I add 2kg, does count go up by 1 or 2? Typical e-com is Qty sum.
+    // Let's do Unique Items count first as per previous design "x items selected", 
+    // or Qty sum? "increase it as i go on add" implies Qty sum.
+    // Let's stick to unique items count to match "3 items selected" text used before, 
+    // unless user complains. Actually, let's do unique items count.
 
     const count = Object.keys(cart).length;
-    const countDisplay = bar.querySelector('.cart-count');
+    // OR if we want total quantity:
+    // let count = 0; for(let k in cart) count += cart[k].qty;
 
-    if (count > 0) {
-        bar.style.display = "flex";
-        bar.classList.add('active'); // trigger animation
-        countDisplay.textContent = `${count} item${count > 1 ? 's' : ''} selected`;
-    } else {
-        bar.style.display = "none";
-        bar.classList.remove('active');
-    }
+    const badges = document.querySelectorAll('.cart-badge');
+    badges.forEach(badge => {
+        badge.innerText = count;
+        // Animation bump
+        badge.classList.remove('bump');
+        void badge.offsetWidth; // trigger reflow
+        badge.classList.add('bump');
+    });
+}
+
+// REMOVED: updateFloatingBar logic because user requested removal.
+function updateFloatingBar() {
+    // No-op or remove element if exists
+    const bar = document.getElementById('floating-bar');
+    if (bar) bar.remove();
 }
 
 function saveCartIsStorage() {
@@ -218,7 +408,7 @@ function loadCartFromStorage() {
                 }
             }
         });
-        updateFloatingBar();
+        updateNavbarCartCount();
     }
 }
 
@@ -234,30 +424,54 @@ function goToSummary() {
 
 function loadSummaryPage() {
     const storedCart = localStorage.getItem('pickleCart');
-    if (!storedCart) {
-        window.location.href = "order.html"; // Redirect if no cart
+    let cartIsEmpty = true;
+
+    if (storedCart) {
+        cart = JSON.parse(storedCart);
+        if (Object.keys(cart).length > 0) {
+            cartIsEmpty = false;
+        }
+    }
+
+    if (cartIsEmpty) {
+        const summaryCard = document.querySelector('.summary-card');
+        if (summaryCard) {
+            summaryCard.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🛒</div>
+                    <h2 style="margin-bottom: 10px; color: var(--text-dark);">Your cart is empty</h2>
+                    <p style="color: var(--text-light); margin-bottom: 30px;">You haven’t added any pickles yet.</p>
+                    <a href="order-pickles" class="btn" style="display: inline-block;">Go to Menu</a>
+                </div>
+            `;
+        }
         return;
     }
 
-    cart = JSON.parse(storedCart);
+
     const summaryList = document.getElementById('summary-list');
+
+    // UI Elements for Calculations
+    const subtotalDisplay = document.getElementById('subtotal-price');
+    const discountRow = document.getElementById('discount-row');
+    const discountPercentDisplay = document.getElementById('discount-percent');
+    const discountAmountDisplay = document.getElementById('discount-amount');
+    const offerMessage = document.getElementById('offer-message');
     const totalDisplay = document.getElementById('total-price');
+
     const orderBtn = document.getElementById('place-order-btn');
 
-    let html = "";
-    let total = 0;
+    if (!summaryList) return;
 
-    if (Object.keys(cart).length === 0) {
-        summaryList.innerHTML = "<p>Your cart is empty.</p>";
-        return;
-    }
+    let html = "";
+    let subtotal = 0;
 
     for (const [name, item] of Object.entries(cart)) {
         const itemTotal = item.price * item.qty;
-        total += itemTotal;
+        subtotal += itemTotal;
         html += `
             <div class="summary-item">
-                <div>
+                <div style="flex:1">
                     <div class="summary-item-name">${name}</div>
                     <div class="summary-item-details">${item.qty} Kg x ₹${item.price}</div>
                 </div>
@@ -267,10 +481,13 @@ function loadSummaryPage() {
     }
 
     summaryList.innerHTML = html;
-    totalDisplay.textContent = `₹${total}`;
+
+    const finalTotal = subtotal;
+
+    if (totalDisplay) totalDisplay.textContent = `₹${finalTotal}`;
 
     // Update Button Text
-    orderBtn.innerHTML = "Place Order on WhatsApp"; // Simpler text
+    orderBtn.innerHTML = "Confirm & Order on WhatsApp";
 
     // Setup WhatsApp Button
     orderBtn.onclick = () => {
@@ -287,7 +504,9 @@ function loadSummaryPage() {
             message += `${itemName} - ${item.qty} Kg - ₹${item.price * item.qty}\n`;
         }
 
-        message += `\nTotal: ₹${total}\n\nName: ${name}\nPhone: ${phone}`;
+        message += `\nTotal: ₹${finalTotal}`;
+
+        message += `\n\nName: ${name}\nPhone: ${phone}`;
 
         const encodedMessage = encodeURIComponent(message);
         const url = `https://wa.me/${OWNER_NUMBER}?text=${encodedMessage}`;
@@ -296,4 +515,32 @@ function loadSummaryPage() {
         // Optional: Clear cart after order? 
         // localStorage.removeItem('pickleCart'); 
     };
+
+
+
 }
+
+/* Toast Notification Logic */
+function showToast(message, type) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+
+    const icon = type === 'added' ? '✅' : '🗑️';
+
+    toast.innerHTML = '<span style="margin-right:10px; font-size:1.2rem;">' + icon + '</span><span>' + message + '</span>';
+
+    container.appendChild(toast);
+
+    // Remove element after animation (3s)
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
