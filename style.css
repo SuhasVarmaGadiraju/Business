@@ -679,9 +679,12 @@ header p {
     /* Dark earthy brown */
     color: #fff3e0;
     /* Light creamy text */
-    padding: 60px 0 20px;
+    padding: 60px 20px 20px;
+    /* Added horizontal padding */
     margin-top: 50px;
     border-top: 5px solid var(--primary-color);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .footer-content {
