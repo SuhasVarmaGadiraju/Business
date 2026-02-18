@@ -79,13 +79,9 @@ function loadOrderPage() {
     const vegPickles = pickles.filter(p => vegNames.includes(p.name));
     const nonVegPickles = pickles.filter(p => !vegNames.includes(p.name));
 
-    // Enhanced Grid Generator with State Persistence
+    // Enhanced Grid Generator
     window.generateGrid = (items) => {
         return items.map(pickle => {
-            // Get current quantity from global cart to persist state across tab switches
-            const currentQty = (cart && cart[pickle.name]) ? cart[pickle.name].qty : 0;
-            const opt = (val, label) => `<option value="${val}" ${currentQty == val ? 'selected' : ''}>${label}</option>`;
-
             return `
             <div class="card" data-name="${pickle.name}" data-price="${pickle.price}">
                 <div class="card-img-wrapper">
@@ -94,19 +90,20 @@ function loadOrderPage() {
                 <div class="card-body">
                     <div class="card-header-row">
                         <h3 class="card-title">${pickle.name}</h3>
-                        <div class="card-price">₹${pickle.price}/Kg</div>
+                        <div class="price-badge">₹${pickle.price}/Kg</div>
                     </div>
-                    <div class="form-group">
-                        <label>Select Quantity:</label>
-                        <select class="form-control qty-select" onchange="updateCart(this)">
-                            ${opt(0, 'Select (0 Kg)')}
-                            ${opt(1, '1 Kg')}
-                            ${opt(2, '2 Kg')}
-                            ${opt(3, '3 Kg')}
-                            ${opt(4, '4 Kg')}
-                            ${opt(5, '5 Kg')}
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #666; margin-bottom: 5px; display: block;">Select Quantity:</label>
+                        <select class="form-control qty-select">
+                            <option value="0">Select (0 Kg)</option>
+                            <option value="1">1 Kg</option>
+                            <option value="2">2 Kg</option>
+                            <option value="3">3 Kg</option>
+                            <option value="4">4 Kg</option>
+                            <option value="5">5 Kg</option>
                         </select>
                     </div>
+                    <button class="btn btn-add-to-cart" onclick="addToCart(this)">Add to Cart</button>
                 </div>
             </div>`;
         }).join('');
@@ -154,31 +151,46 @@ function loadOrderPage() {
 }
 
 
-function updateCart(selectElement) {
-    const card = selectElement.closest('.card');
+window.addToCart = (btn) => {
+    const card = btn.closest('.card');
     const name = card.dataset.name;
     const price = parseInt(card.dataset.price);
-    const qty = parseInt(selectElement.value);
+    const select = card.querySelector('.qty-select');
+    const qty = parseInt(select.value);
 
-    // Track previous state
-    const currentQty = (cart[name]) ? cart[name].qty : 0;
-
-    if (qty > 0) {
-        cart[name] = { price: price, qty: qty };
-    } else {
-        if (currentQty > 0) {
-            delete cart[name];
-        }
+    if (qty <= 0) {
+        showToast("Please select quantity.", "removed");
+        return;
     }
 
-    // REMOVED: Sidebar popup logic (toggleCart, updateMiniCart)
-    // REMOVED: Floating bar logic (updateFloatingBar)
+    // Add or Update Cart
+    if (cart[name]) {
+        cart[name].qty += qty;
+    } else {
+        cart[name] = { price: price, qty: qty };
+    }
 
-    // Update Header Count
+    // UI Feedback: Button text change
+    const originalText = btn.innerText;
+    btn.innerText = "Added ✓";
+    btn.classList.add('btn-added'); // Use class for styling if needed
+    btn.disabled = true;
+
+    // Reset Dropdown
+    select.value = "0";
+
+    // Revert button after 1.5s
+    setTimeout(() => {
+        btn.innerText = originalText;
+        btn.classList.remove('btn-added');
+        btn.disabled = false;
+    }, 1500);
+
+    // Save and Update
+    saveCartToStorage();
     updateNavbarCartCount();
-
-    saveCartIsStorage();
-}
+    showToast(`${name} added to cart!`, "added");
+};
 
 /* Mini Cart Sidebar Logic */
 let cartTimer = null; // Global timer variable
@@ -323,37 +335,14 @@ function changeCartQty(name, change) {
 
     const newQty = cart[name].qty + change;
 
-    // Check Max Limit (5 Kg)
-    if (newQty > 5) {
-        showToast("Maximum 5 Kg allowed per pickle.", "removed"); // using 'removed' style for error/warning
-        return;
-    }
-
     if (newQty <= 0) {
         delete cart[name];
     } else {
         cart[name].qty = newQty;
     }
 
-    // 1. Save
-    saveCartIsStorage();
-
-    // 2. Update Sidebar
+    saveCartToStorage();
     updateMiniCart();
-
-    // 4. Update Main Grid UI (Crucial)
-    // Find card by data-name
-    const card = document.querySelector(`.card[data-name="${name}"]`);
-    if (card) {
-        const select = card.querySelector('.qty-select');
-        if (select) {
-            select.value = newQty;
-            // Handle 0 case (unselect)
-            if (newQty <= 0) select.value = 0;
-        }
-    }
-
-    // 5. Update Navbar Count
     updateNavbarCartCount();
 }
 
@@ -388,7 +377,7 @@ function updateFloatingBar() {
     if (bar) bar.remove();
 }
 
-function saveCartIsStorage() {
+function saveCartToStorage() {
     localStorage.setItem('pickleCart', JSON.stringify(cart));
 }
 
@@ -473,9 +462,16 @@ function loadSummaryPage() {
             <div class="summary-item">
                 <div style="flex:1">
                     <div class="summary-item-name">${name}</div>
-                    <div class="summary-item-details">${item.qty} Kg x ₹${item.price}</div>
+                    <div class="summary-item-details">₹${item.price}/Kg</div>
                 </div>
-                <div style="font-weight:bold;">₹${itemTotal}</div>
+                <div class="summary-qty-row">
+                    <div class="qty-adjuster">
+                        <button class="qty-btn-circle" onclick="updateSummaryQty('${name}', -1)">−</button>
+                        <span class="qty-val">${item.qty} Kg</span>
+                        <button class="qty-btn-circle" onclick="updateSummaryQty('${name}', 1)">+</button>
+                    </div>
+                    <div class="item-total-price">₹${itemTotal}</div>
+                </div>
             </div>
         `;
     }
@@ -543,4 +539,21 @@ function showToast(message, type) {
         toast.remove();
     }, 3000);
 }
+
+window.updateSummaryQty = (name, change) => {
+    if (!cart[name]) return;
+
+    const newQty = cart[name].qty + change;
+    if (newQty <= 0) {
+        if (confirm(`Remove ${name} from cart?`)) {
+            delete cart[name];
+        }
+    } else {
+        cart[name].qty = newQty;
+    }
+
+    saveCartToStorage();
+    updateNavbarCartCount();
+    loadSummaryPage(); // Re-render
+};
 
