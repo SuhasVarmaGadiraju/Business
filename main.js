@@ -465,10 +465,10 @@ function loadSummaryPage() {
                     <div class="summary-item-details">₹${item.price}/Kg</div>
                 </div>
                 <div class="summary-qty-row">
-                    <div class="qty-adjuster">
-                        <button class="qty-btn-circle" onclick="updateSummaryQty('${name}', -1)">−</button>
-                        <span class="qty-val">${item.qty} Kg</span>
-                        <button class="qty-btn-circle" onclick="updateSummaryQty('${name}', 1)">+</button>
+                    <div class="qty-pill">
+                        <button class="qty-btn-pill" onclick="updateSummaryQty('${name}', -1)">${item.qty === 1 ? '🗑️' : '−'}</button>
+                        <span class="qty-val-pill">${item.qty}</span>
+                        <button class="qty-btn-pill" onclick="updateSummaryQty('${name}', 1)">+</button>
                     </div>
                     <div class="item-total-price">₹${itemTotal}</div>
                 </div>
