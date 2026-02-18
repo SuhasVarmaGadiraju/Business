@@ -117,7 +117,7 @@ header p {
     /* Subtle dark overlay for premium look, fits background image properly */
     background:
         linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
-        url('images/Homepage Background.jpg');
+        url('images/Homepage.png');
 
     background-size: cover;
     background-position: center top;
