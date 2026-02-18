@@ -465,13 +465,14 @@ function loadSummaryPage() {
                     <div class="summary-item-details">₹${item.price}/Kg</div>
                 </div>
                 <div class="summary-qty-row">
-                    <div class="qty-pill">
-                        <button class="qty-btn-pill" onclick="updateSummaryQty('${name}', -1)">${item.qty === 1 ? '🗑️' : '−'}</button>
-                        <span class="qty-val-pill">${item.qty}</span>
-                        <button class="qty-btn-pill" onclick="updateSummaryQty('${name}', 1)">+</button>
+                    <div class="qty-stepper">
+                        <button class="qty-btn-icon" onclick="removeFromCart('${name}')">🗑️</button>
+                        <button class="qty-btn-minus" onclick="updateSummaryQty('${name}', -1)">−</button>
+                        <span class="qty-value-text">${item.qty} Kg</span>
+                        <button class="qty-btn-plus" onclick="updateSummaryQty('${name}', 1)">+</button>
                     </div>
-                    <div class="item-total-price">₹${itemTotal}</div>
                 </div>
+                <div class="item-total-price" style="text-align: right; margin-top: 5px;">₹${itemTotal}</div>
             </div>
         `;
     }
@@ -555,5 +556,14 @@ window.updateSummaryQty = (name, change) => {
     saveCartToStorage();
     updateNavbarCartCount();
     loadSummaryPage(); // Re-render
+};
+
+window.removeFromCart = (name) => {
+    if (confirm(`Remove ${name} from cart?`)) {
+        delete cart[name];
+        saveCartToStorage();
+        updateNavbarCartCount();
+        loadSummaryPage(); // Re-render
+    }
 };
 
