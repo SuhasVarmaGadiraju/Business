@@ -448,7 +448,7 @@ function loadSummaryPage() {
                     <div style="font-size: 3rem; margin-bottom: 20px;">🛒</div>
                     <h2 style="margin-bottom: 10px; color: var(--text-dark);">Your cart is empty</h2>
                     <p style="color: var(--text-light); margin-bottom: 30px;">You haven’t added any pickles yet.</p>
-                    <a href="order.html" class="btn" style="display: inline-block;">Go to Menu</a>
+                    <a href="/order-pickles" class="btn" style="display: inline-block;">Go to Menu</a>
                 </div>
             `;
         }
