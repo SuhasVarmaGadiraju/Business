@@ -58,7 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- ORDER PAGE LOGIC ---
 
 function loadOrderPage() {
+    console.log("Loading Order Page...");
     const container = document.getElementById("pickle-grid");
+    if (!container) {
+        console.error("Order page container #pickle-grid not found!");
+        return;
+    }
     container.className = "store-container";
 
     // Add Tabs and Main Grid Container
