@@ -827,3 +827,15 @@ header p {
  } 
   
  
+ . p a g e - t i t l e - s e c t i o n   { 
+         d i s p l a y :   f l e x ; 
+         f l e x - d i r e c t i o n :   c o l u m n ; 
+         j u s t i f y - c o n t e n t :   c e n t e r ; 
+         a l i g n - i t e m s :   c e n t e r ; 
+         t e x t - a l i g n :   c e n t e r ; 
+         w i d t h :   1 0 0 % ; 
+         m a r g i n :   3 0 p x   a u t o ; 
+         p a d d i n g :   0   2 0 p x ; 
+ } 
+  
+ 
