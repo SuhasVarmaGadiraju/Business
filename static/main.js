@@ -490,9 +490,15 @@ function loadSummaryPage() {
     orderBtn.onclick = () => {
         const name = document.getElementById('customer-name').value.trim();
         const phone = document.getElementById('customer-phone').value.trim();
+        const address = document.getElementById('customer-address').value.trim();
 
         if (!name || !phone) {
             alert("Please provide your Name and Phone Number.");
+            return;
+        }
+
+        if (!address) {
+            alert("Please enter your delivery address.");
             return;
         }
 
@@ -503,7 +509,7 @@ function loadSummaryPage() {
 
         message += `\nTotal: ₹${finalTotal}`;
 
-        message += `\n\nName: ${name}\nPhone: ${phone}`;
+        message += `\n\nName: ${name}\nPhone: ${phone}\nAddress:\n${address}`;
 
         const encodedMessage = encodeURIComponent(message);
         const url = `https://wa.me/${OWNER_NUMBER}?text=${encodedMessage}`;
