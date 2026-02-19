@@ -57,17 +57,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // --- ORDER PAGE LOGIC ---
 
-function loadOrderPage() {
-    console.log("Loading Order Page...");
-    const container = document.getElementById("pickle-grid");
-    if (!container) {
-        console.error("Order page container #pickle-grid not found!");
-        return;
-    }
-    container.className = "store-container";
+window.loadOrderPage = function () {
+    console.log("Starting loadOrderPage...");
+    try {
+        const container = document.getElementById("pickle-grid");
+        if (!container) {
+            console.error("Order page container #pickle-grid not found!");
+            return;
+        }
+        container.innerHTML = '<div style="text-align:center; padding:20px;">Loading pickles...</div>';
+        setTimeout(() => {
+            try {
+                container.className = "store-container";
 
-    // Add Tabs and Main Grid Container
-    const tabsHTML = `
+                // Add Tabs and Main Grid Container
+                const tabsHTML = `
         <div class="category-tabs">
             <button class="tab-btn active" onclick="filterCategory('all')">All</button>
             <button class="tab-btn" onclick="filterCategory('veg')">Veg 🌿</button>
@@ -77,17 +81,17 @@ function loadOrderPage() {
             <!-- Items injected here -->
         </div>
     `;
-    container.innerHTML = tabsHTML;
+                container.innerHTML = tabsHTML;
 
-    // Define Categories
-    const vegNames = ["Mango Pickle", "Allam Pickle", "Gongura Pickle", "Tomato Pickle"];
-    const vegPickles = pickles.filter(p => vegNames.includes(p.name));
-    const nonVegPickles = pickles.filter(p => !vegNames.includes(p.name));
+                // Define Categories
+                const vegNames = ["Mango Pickle", "Allam Pickle", "Gongura Pickle", "Tomato Pickle"];
+                const vegPickles = pickles.filter(p => vegNames.includes(p.name));
+                const nonVegPickles = pickles.filter(p => !vegNames.includes(p.name));
 
-    // Enhanced Grid Generator
-    window.generateGrid = (items) => {
-        return items.map(pickle => {
-            return `
+                // Enhanced Grid Generator
+                window.generateGrid = (items) => {
+                    return items.map(pickle => {
+                        return `
             <div class="card" data-name="${pickle.name}" data-price="${pickle.price}">
                 <div class="card-img-wrapper">
                     <img src="${pickle.image}" alt="${pickle.name}" class="card-img">
@@ -111,49 +115,58 @@ function loadOrderPage() {
                     <button class="btn btn-add-to-cart" onclick="addToCart(this)">Add to Cart</button>
                 </div>
             </div>`;
-        }).join('');
-    };
+                    }).join('');
+                };
 
-    // Filter Function
-    window.filterCategory = (category) => {
-        const productsArea = document.getElementById('products-area');
-        const buttons = document.querySelectorAll('.tab-btn');
+                // Filter Function
+                window.filterCategory = (category) => {
+                    const productsArea = document.getElementById('products-area');
+                    const buttons = document.querySelectorAll('.tab-btn');
 
-        // Update Buttons Styling
-        buttons.forEach(btn => {
-            btn.style.background = 'white';
-            btn.style.color = '#333';
-            btn.style.border = '2px solid #e0e0e0';
-        });
+                    // Update Buttons Styling
+                    buttons.forEach(btn => {
+                        btn.style.background = 'white';
+                        btn.style.color = '#333';
+                        btn.style.border = '2px solid #e0e0e0';
+                    });
 
-        // Highlight active button
-        const activeBtn = Array.from(buttons).find(b =>
-            b.innerText.toLowerCase().includes(category === 'all' ? 'all' : category === 'veg' ? 'veg' : 'non') &&
-            (category !== 'veg' || !b.innerText.includes('Non'))
-        );
-        if (activeBtn) {
-            activeBtn.style.background = '#ff7043';
-            activeBtn.style.color = 'white';
-            activeBtn.style.border = 'none';
-        }
+                    // Highlight active button
+                    const activeBtn = Array.from(buttons).find(b =>
+                        b.innerText.toLowerCase().includes(category === 'all' ? 'all' : category === 'veg' ? 'veg' : 'non') &&
+                        (category !== 'veg' || !b.innerText.includes('Non'))
+                    );
+                    if (activeBtn) {
+                        activeBtn.style.background = '#ff7043';
+                        activeBtn.style.color = 'white';
+                        activeBtn.style.border = 'none';
+                    }
 
-        // Render Content with Fade
-        productsArea.style.opacity = '0';
-        setTimeout(() => {
-            let itemsToShow = [];
-            if (category === 'all') itemsToShow = pickles; // Show all mixed
-            else if (category === 'veg') itemsToShow = vegPickles;
-            else if (category === 'non-veg') itemsToShow = nonVegPickles;
+                    // Render Content with Fade
+                    productsArea.style.opacity = '0';
+                    setTimeout(() => {
+                        let itemsToShow = [];
+                        if (category === 'all') itemsToShow = pickles; // Show all mixed
+                        else if (category === 'veg') itemsToShow = vegPickles;
+                        else if (category === 'non-veg') itemsToShow = nonVegPickles;
 
-            productsArea.innerHTML = window.generateGrid(itemsToShow);
-            productsArea.style.opacity = '1';
-        }, 200);
-    };
+                        productsArea.innerHTML = window.generateGrid(itemsToShow);
+                        productsArea.style.opacity = '1';
+                    }, 200);
+                };
 
-    // Initial Render: Trigger 'all' view to show combined list
-    setTimeout(() => filterCategory('all'), 0);
+                // Initial Render: Trigger 'all' view to show combined list
+                setTimeout(() => filterCategory('all'), 0);
 
-}
+            } catch (err) {
+                console.error("Store render error:", err);
+                const grid = document.getElementById("pickle-grid");
+                if (grid) grid.innerHTML = `<div style="color:red; padding:20px; text-align:center;">Error loading store: ${err.message}</div>`;
+            }
+        }, 50);
+    } catch (e) {
+        console.error("Critical initialization error:", e);
+    }
+};
 
 
 window.addToCart = (btn) => {
