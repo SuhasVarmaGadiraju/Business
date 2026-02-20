@@ -424,7 +424,7 @@ function goToSummary() {
         alert("Please select at least one pickle!");
         return;
     }
-    window.location.href = "summary.html";
+    window.location.href = "./summary.html";
 }
 
 // --- SUMMARY PAGE LOGIC ---
