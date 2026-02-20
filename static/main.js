@@ -5,19 +5,19 @@ console.log("Script version: Mango Added v2");
 // PICKLE DATA
 const pickles = [
     // Veg Pickles
-    { name: "Mango Pickle", price: 450, image: "images/mango_pickle.jpg" },
-    { name: "Allam Pickle", price: 300, image: "images/Allam Pickle.jpg" },
-    { name: "Gongura Pickle", price: 300, image: "images/Gongura Pickle.jpeg" },
-    { name: "Tomato Pickle", price: 300, image: "images/Tomato Pickle.jpeg" },
+    { name: "Mango Pickle", price: 450, image: "./static/images/mango_pickle.jpg" },
+    { name: "Allam Pickle", price: 300, image: "./static/images/Allam Pickle.jpg" },
+    { name: "Gongura Pickle", price: 300, image: "./static/images/Gongura Pickle.jpeg" },
+    { name: "Tomato Pickle", price: 300, image: "./static/images/Tomato Pickle.jpeg" },
 
     // Non-Veg Pickles
-    { name: "Korameenu Pickle", price: 1100, image: "images/Korameenu pickle.jpg" },
-    { name: "Prawns(Large) Pickle", price: 1300, image: "images/Prawns Pickle.jpeg" },
-    { name: "Prawns(Small) Pickle", price: 1100, image: "images/Prawns Pickle.jpeg" },
-    { name: "Natukodi Pickle", price: 1200, image: "images/Natukodi Pickle.jpeg" },
-    { name: "Mutton Boneless Pickle", price: 1500, image: "images/Mutton boneless Pickle.webp" },
-    { name: "Chicken Bone Pickle", price: 800, image: "images/Chicken Bone Pickle.jpg" },
-    { name: "Chicken Boneless Pickle", price: 1000, image: "images/Chicken Boneless.jpeg" }
+    { name: "Korameenu Pickle", price: 1100, image: "./static/images/Korameenu pickle.jpg" },
+    { name: "Prawns(Large) Pickle", price: 1300, image: "./static/images/Prawns Pickle.jpeg" },
+    { name: "Prawns(Small) Pickle", price: 1100, image: "./static/images/Prawns Pickle.jpeg" },
+    { name: "Natukodi Pickle", price: 1200, image: "./static/images/Natukodi Pickle.jpeg" },
+    { name: "Mutton Boneless Pickle", price: 1500, image: "./static/images/Mutton boneless Pickle.webp" },
+    { name: "Chicken Bone Pickle", price: 800, image: "./static/images/Chicken Bone Pickle.jpg" },
+    { name: "Chicken Boneless Pickle", price: 1000, image: "./static/images/Chicken Boneless.jpeg" }
 ];
 
 // CART STATE
@@ -448,7 +448,7 @@ function loadSummaryPage() {
                     <div style="font-size: 3rem; margin-bottom: 20px;">🛒</div>
                     <h2 style="margin-bottom: 10px; color: var(--text-dark);">Your cart is empty</h2>
                     <p style="color: var(--text-light); margin-bottom: 30px;">You haven’t added any pickles yet.</p>
-                    <a href="/order-pickles" class="btn" style="display: inline-block;">Go to Menu</a>
+                    <a href="./order.html" class="btn" style="display: inline-block;">Go to Menu</a>
                 </div>
             `;
         }
@@ -457,18 +457,6 @@ function loadSummaryPage() {
 
 
     const summaryList = document.getElementById('summary-list');
-
-    // UI Elements for Calculations
-    const subtotalDisplay = document.getElementById('subtotal-price');
-    const discountRow = document.getElementById('discount-row');
-    const discountPercentDisplay = document.getElementById('discount-percent');
-    const discountAmountDisplay = document.getElementById('discount-amount');
-    const offerMessage = document.getElementById('offer-message');
-    const totalDisplay = document.getElementById('total-price');
-
-    const orderBtn = document.getElementById('place-order-btn');
-
-    if (!summaryList) return;
 
     let html = "";
     let subtotal = 0;
@@ -484,31 +472,36 @@ function loadSummaryPage() {
                 </div>
                 <div class="summary-qty-row">
                     <div class="qty-stepper">
-                        <button class="qty-btn-icon" onclick="removeFromCart('${name}')">🗑️</button>
                         <button class="qty-btn-minus" onclick="updateSummaryQty('${name}', -1)">−</button>
                         <span class="qty-value-text">${item.qty} Kg</span>
                         <button class="qty-btn-plus" onclick="updateSummaryQty('${name}', 1)">+</button>
+                        <button class="qty-btn-icon" onclick="removeFromCart('${name}')">🗑️</button>
                     </div>
+                    <div class="item-subtotal">₹${item.qty * item.price}</div>
                 </div>
-                <div class="item-total-price" style="text-align: right; margin-top: 5px;">₹${itemTotal}</div>
             </div>
         `;
     }
 
     summaryList.innerHTML = html;
 
+    // Update totals
+    const totalDisplay = document.getElementById('total-price');
+    const orderBtn = document.getElementById('place-order-btn');
     const finalTotal = subtotal;
 
     if (totalDisplay) totalDisplay.textContent = `₹${finalTotal}`;
 
     // Update Button Text
-    orderBtn.innerHTML = "Confirm & Order on WhatsApp";
+    if (orderBtn) orderBtn.innerHTML = "Confirm & Order on WhatsApp";
 
     // Setup WhatsApp Button
-    orderBtn.onclick = () => {
+    if (orderBtn) orderBtn.onclick = () => {
         const name = document.getElementById('customer-name').value.trim();
         const phone = document.getElementById('customer-phone').value.trim();
         const address = document.getElementById('customer-address').value.trim();
+        const city = document.getElementById('customer-city').value.trim();
+        const pincode = document.getElementById('customer-pincode').value.trim();
 
         if (!name || !phone) {
             alert("Please provide your Name and Phone Number.");
@@ -520,21 +513,21 @@ function loadSummaryPage() {
             return;
         }
 
+        let fullAddress = address;
+        if (city) fullAddress += `\n${city}`;
+        if (pincode) fullAddress += ` - ${pincode}`;
+
         let message = "New Pickle Order:\n\n";
         for (const [itemName, item] of Object.entries(cart)) {
             message += `${itemName} - ${item.qty} Kg - ₹${item.price * item.qty}\n`;
         }
 
-        message += `\nTotal: ₹${finalTotal}`;
-
-        message += `\n\nName: ${name}\nPhone: ${phone}\nAddress:\n${address}`;
+        message += `\nSubtotal: ₹${finalTotal}`;
+        message += `\n\nName: ${name}\nPhone: ${phone}\nAddress:\n${fullAddress}`;
 
         const encodedMessage = encodeURIComponent(message);
         const url = `https://wa.me/${OWNER_NUMBER}?text=${encodedMessage}`;
         window.open(url, "_blank");
-
-        // Optional: Clear cart after order? 
-        // localStorage.removeItem('pickleCart'); 
     };
 
 
@@ -570,9 +563,7 @@ window.updateSummaryQty = (name, change) => {
 
     const newQty = cart[name].qty + change;
     if (newQty <= 0) {
-        if (confirm(`Remove ${name} from cart?`)) {
-            delete cart[name];
-        }
+        delete cart[name];
     } else {
         cart[name].qty = newQty;
     }

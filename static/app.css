@@ -821,21 +821,138 @@ header p {
         transform: translateX(-50%) translateY(20px);
     }
 }
- . p a g e - t i t l e - s e c t i o n   { 
-         t e x t - a l i g n :   c e n t e r ; 
-         p a d d i n g :   3 0 p x   2 0 p x ; 
- } 
-  
- 
- . p a g e - t i t l e - s e c t i o n   { 
-         d i s p l a y :   f l e x ; 
-         f l e x - d i r e c t i o n :   c o l u m n ; 
-         j u s t i f y - c o n t e n t :   c e n t e r ; 
-         a l i g n - i t e m s :   c e n t e r ; 
-         t e x t - a l i g n :   c e n t e r ; 
-         w i d t h :   1 0 0 % ; 
-         m a r g i n :   3 0 p x   a u t o ; 
-         p a d d i n g :   0   2 0 p x ; 
- } 
-  
- 
+
+/* Center page title section and reduce footer size */
+.page-title-section {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.page-title-section h1 {
+    margin-bottom: 0.5rem;
+}
+
+.page-title-section p {
+    margin-top: 0;
+    font-size: 1.1rem;
+    color: var(--text-light);
+}
+
+/* Reduce footer size */
+.site-footer {
+    padding: 30px 0 15px;
+    margin-top: 40px;
+}
+
+.footer-content {
+    gap: 25px;
+    margin-bottom: 20px;
+}
+
+.footer-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+}
+
+.footer-section p {
+font-size: 0.9rem;
+margin-bottom: 6px;
+}
+
+.footer-bottom {
+padding-top: 12px;
+font-size: 0.8rem;
+}
+
+/* Summary page improvements */
+.summary-line {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px 0;
+border-bottom: 1px solid #f0f0f0;
+}
+
+.final-total-line {
+font-weight: 700;
+font-size: 1.2rem;
+color: var(--primary-color);
+padding-top: 15px;
+border-top: 2px solid var(--primary-color);
+border-bottom: none;
+}
+
+.invoice-label {
+font-weight: 600;
+color: var(--text-dark);
+}
+
+.invoice-value {
+font-weight: 700;
+color: var(--text-dark);
+}
+
+.item-total-price {
+font-weight: 700;
+font-size: 1.05rem;
+color: var(--text-dark);
+text-align: right;
+margin-top: 5px;
+}
+
+/* Address field full width on mobile */
+.customer-details textarea.form-control {
+width: 100%;
+resize: vertical;
+min-height: 90px;
+}
+
+/* Sticky totals on mobile */
+@media (max-width: 768px) {
+.total-section {
+position: sticky;
+bottom: 0;
+background: #fff;
+padding: 15px;
+border-top: 2px solid var(--primary-color);
+border-radius: 15px 15px 0 0;
+box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+margin: 20px -20px 0;
+}
+}
+
+/* Helper text for price per kg */
+.price-helper {
+font-size: 0.8rem;
+color: #999;
+margin-top: 4px;
+text-align: center;
+}
+
+/* Item subtotal */
+.item-subtotal {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* Stepper improvements */
+.summary-qty-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
+
+.qty-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.summary-qty-row > .qty-btn-icon {
+    order: 3;
+}
