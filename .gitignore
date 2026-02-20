@@ -1,6 +1,16 @@
 .venv/
 __pycache__/
 *.pyc
+.Python
+*.pyo
+*.pyd
+.pytest_cache/
+venv/
+ENV/
+env/
+.env
+.env.*
+*.log
 .DS_Store
 .agent/
 .gemini/
